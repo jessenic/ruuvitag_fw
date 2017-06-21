@@ -5,6 +5,7 @@
  *
  * Copyright (c) 2016, Offcode Ltd. All rights reserved.
  * Author: Janne Rosberg <janne@offcode.fi>
+ * Author: Otso Jousimaa <otso@ruuvi.com> (see changelog)
  *
  * Reference: BST-BME280-DS001-11 | Revision 1.2 | October 2015
  *
@@ -32,13 +33,17 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+ 
+ /*
+  *  Changelog
+  *  2017-01-28 Otso Jousimaa Add comments.
+  *  2017-04-06: Add t_sb register values
+  */
 
 #include <stdint.h>
 #include <stdbool.h>
 #include "nrf.h"
 #include "spi.h"
-#include "nrf_log.h"
-#include "nrf_log_ctrl.h"
 #include "nrf_drv_timer.h"
 #include "nrf_drv_gpiote.h"
 #include "bsp.h"
@@ -121,15 +126,41 @@ typedef enum
 #define BME280_OVERSAMPLING_8		(0x04)
 #define BME280_OVERSAMPLING_16		(0x05)
 
+#define BME280_INTERVAL_MASK 0xE0
+enum BME280_INTERVAL {
+	BME280_STANDBY_0_5_MS  = 0x0,
+	BME280_STANDBY_62_5_MS = 0x20,
+	BME280_STANDBY_125_MS  = 0x40,
+	BME280_STANDBY_500_MS  = 0x80,
+	BME280_STANDBY_1000_MS = 0xA0
+};
+
 BME280_Ret bme280_init();
 BME280_Ret bme280_set_mode(enum BME280_MODE mode);
+BME280_Ret bme280_set_interval(enum BME280_INTERVAL interval);
 int  bme280_is_measuring(void);
 BME280_Ret bme280_read_measurements();
 BME280_Ret bme280_set_oversampling_hum(uint8_t os);
 BME280_Ret bme280_set_oversampling_temp(uint8_t os);
 BME280_Ret bme280_set_oversampling_press(uint8_t os);
+/**
+ * Returns temperature in DegC, resolution is 0.01 DegC.
+ * Output value of “2134” equals 21.34 DegC.
+ */
 int32_t  bme280_get_temperature(void);
+
+ /**
+ * Returns pressure in Pa as unsigned 32 bit integer in Q24.8 format
+ * (24 integer bits and 8 fractional bits).
+ * Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
+ */
 uint32_t bme280_get_pressure(void);
+
+/**
+ * Returns humidity in %RH as unsigned 32 bit integer in Q22.10 format
+ * (22 integer and 10 fractional bits).
+ * Output value of “50532” represents 50532/1024 = 49.356 %RH
+ */
 uint32_t bme280_get_humidity(void);
 uint8_t  bme280_read_reg(uint8_t reg);
 BME280_Ret bme280_write_reg(uint8_t reg, uint8_t value);
